@@ -5,9 +5,15 @@
 3.file list  
 
 upload file
+
+windows
 ```
-curl --location --request POST 'http://localhost:8080/upload/litongjava/go/pdf' \
---form 'file=@"C:\\Users\\Administrator\\Downloads\\Go\\Gin Bind Data and Validate.pdf"'
+curl http://localhost:8080/upload/litongjava/go/pdf --form file="@C:\Users\Administrator\Downloads\Go\Gin Bind Data and Validate.pdf"
+```
+
+macos
+```
+curl http://localhost:8080/upload/litongjava/go/pdf --form file="@1.txt"
 ```
 
 file list
