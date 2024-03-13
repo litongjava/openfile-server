@@ -20,7 +20,7 @@ upload file
 
 windows
 ```
-curl --location --request POST https://open-file.fly.dev/upload/litongjava/images --form file=@"q4.png"
+curl --location --request POST http://192.168.3.9/upload/litongjava/images --form file=@"q4.png"
 ```
 linux
 ```shell
