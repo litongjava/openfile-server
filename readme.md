@@ -5,9 +5,14 @@
 3.file list  
 
 ## install
-```build
+```
 docker build -t litongjava/openfile-server:1.0.0 .
 ```
+run
+```
+docker run -dit --name=openfile-server -p 8080:80 litongjava/openfile-server:1.0.0
+```
+
 
 
 ## usage
@@ -15,9 +20,12 @@ upload file
 
 windows
 ```
-curl http://localhost:8080/upload/litongjava/go/pdf --form file="@C:\Users\Administrator\Downloads\Go\Gin Bind Data and Validate.pdf"
+curl --location --request POST https://open-file.fly.dev/upload/litongjava/images --form file=@"q4.png"
 ```
-
+linux
+```shell
+curl --location --request POST http://192.168.3.9:8080/upload/litongjava/images --form file=@"graalvm-jdk-21_linux-x64_bin.tar.gz"
+```
 macos
 ```
 curl http://localhost:8080/upload/litongjava/go/pdf --form file="@1.txt"
