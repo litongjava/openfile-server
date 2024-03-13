@@ -20,16 +20,22 @@ upload file
 
 windows
 ```
-curl --location --request POST http://192.168.3.9/upload/litongjava/images --form file=@"q4.png"
+curl --location --request POST http://localhost:8080/upload/litongjava/images --form file=@"q4.png"
 ```
-linux
-```shell
-curl --location --request POST http://192.168.3.9:8080/upload/litongjava/images --form file=@"graalvm-jdk-21_linux-x64_bin.tar.gz"
+or
+
 ```
-macos
+curl --request POST http://localhost:8080/upload/litongjava/images/ --form file=@"q4.png"
 ```
-curl http://localhost:8080/upload/litongjava/go/pdf --form file="@1.txt"
+or
 ```
+curl -X POST http://localhost:8080/upload/litongjava/images/ --form file=@"q4.png"
+```
+or
+```
+curl http://localhost:8080/upload/litongjava/images/ --form file=@"q4.png"
+```
+
 
 file list
 ```
