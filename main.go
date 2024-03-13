@@ -14,11 +14,12 @@ func init() {
 }
 
 func main() {
-  log.Println("start...")
   port := os.Getenv("PORT")
   if port == "" {
-    log.Fatal("$PORT must be set")
+    port = "80"
   }
+
+  log.Println("start")
 
   gin.SetMode(gin.ReleaseMode)
   r := gin.New()

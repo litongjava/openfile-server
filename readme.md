@@ -1,9 +1,16 @@
 # openfile-server
-
+## introduction
 1.upload file   
 2.download file  
 3.file list  
 
+## install
+```build
+docker build -t litongjava/openfile-server:1.0.0 .
+```
+
+
+## usage
 upload file
 
 windows
@@ -20,3 +27,4 @@ file list
 ```
 http://localhost:8080/s/
 ```
+
