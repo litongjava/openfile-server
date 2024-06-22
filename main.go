@@ -26,6 +26,7 @@ func main() {
 
   r.GET("/ping", controller.Ping)
   r.POST("/upload/:username/:repositoryName/*subFolder", controller.Upload)
+  r.POST("/u/:username/:repositoryName/*subFolder", controller.Upload)
   r.StaticFS("/s", http.Dir("./storage"))
   r.Run(":" + port)
 

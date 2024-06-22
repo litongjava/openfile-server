@@ -35,6 +35,13 @@ or
 ```
 curl http://localhost:8080/upload/litongjava/images/ --form file=@"q4.png"
 ```
+or
+```shell
+curl http://localhost:8080/upload/litongjava/images/ -F file=@"q4.png"
+```
+```shell
+curl http://localhost:8080/upload/litongjava/images/ -F file=@"q4.png" --progress-bar
+```
 
 
 file list
