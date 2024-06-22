@@ -9,7 +9,6 @@ import (
 )
 
 func init() {
-  //设置Flats为 日期 时间 微秒 文件名:行号
   log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 }
 
