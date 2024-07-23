@@ -85,10 +85,20 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
   // Check if file already exists in DB
   existingURL, err := getExistingFileURL(md5Sum)
   if err == nil && existingURL != "" {
+    _, err := os.Stat(existingURL)
+    if os.IsNotExist(err) {
+      go func() {
+        err := myutils.SaveFile(file, existingURL)
+        if err != nil {
+          hlog.Error("Failed to save file:", err)
+        }
+      }()
+    }
     reqCtx.JSON(http.StatusOK, utils.H{
       "code":   200,
       "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
       "data":   existingURL,
+      "md5":    md5Sum,
     })
     return
   }
@@ -109,24 +119,17 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
       "code":   -1,
       "imgUrl": url,
       "data":   filePath,
+      "md5":    md5Sum,
       "error":  err.Error(),
     })
     return
   }
 
-  // Asynchronously save the file
-  go func() {
-    err := myutils.SaveFile(file, filePath)
-    if err != nil {
-      hlog.Error("Failed to save file:", err)
-      // Handle error (e.g., remove DB entry)
-    }
-  }()
-
   reqCtx.JSON(http.StatusOK, utils.H{
     "code":   200,
     "imgUrl": url,
     "data":   filePath,
+    "md5":    md5Sum,
   })
 }
 
