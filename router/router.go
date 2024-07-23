@@ -28,6 +28,10 @@ func RegisterHadlder(h *server.Hertz) {
     handler.Upload(ctx, "file/doc/")
   })
 
+  h.POST("/upload", func(c context.Context, ctx *app.RequestContext) {
+    handler.Upload(ctx, "file/")
+  })
+
   h.GET("/url", handler.GetUrl)
 
   //h.StaticFS("/file", "./file")
