@@ -3,14 +3,30 @@ package main
 import (
   "flag"
   "github.com/cloudwego/hertz/pkg/app/server"
+  "github.com/cloudwego/hertz/pkg/common/hlog"
   "github.com/hertz-contrib/cors"
   "github.com/litongjava/openfile-server/can"
   "github.com/litongjava/openfile-server/router"
+  "io"
+  "os"
   "strconv"
   "time"
 )
 
 func main() {
+  hlog.SetLevel(hlog.LevelDebug)
+  f, err := os.Create("app.log")
+  if err != nil {
+    panic(err)
+  }
+  defer f.Close()
+
+  // SetOutput sets the output of default logger. By default, it is stderr.
+  //hlog.SetOutput(f)
+  // if you want to output the log to the file and the stdout at the same time, you can use the following codes
+  fileWriter := io.MultiWriter(f, os.Stdout)
+  hlog.SetOutput(fileWriter)
+
   port := flag.Int("port", 9000, "server port.")
   flag.Parse()
   can.OpenDb()

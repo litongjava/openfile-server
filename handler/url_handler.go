@@ -24,15 +24,21 @@ func GetUrl(ctx context.Context, reqCtx *app.RequestContext) {
   existingURL, err := getExistingFileURL(md5Sum)
   if err == nil && existingURL != "" {
     _, err := os.Stat(existingURL)
-    if !os.IsNotExist(err) {
+    if err != nil {
       reqCtx.JSON(http.StatusOK, utils.H{
-        "code":   200,
-        "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
-        "data":   existingURL,
-        "md5":    md5Sum,
+        "code": -1,
+        "msg":  err.Error(),
       })
       return
     }
+
+    reqCtx.JSON(http.StatusOK, utils.H{
+      "code":   200,
+      "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
+      "data":   existingURL,
+      "md5":    md5Sum,
+    })
+    return
   }
 
   reqCtx.JSON(http.StatusOK, utils.H{

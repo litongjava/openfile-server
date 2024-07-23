@@ -125,6 +125,13 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
     return
   }
 
+  go func() {
+    err := myutils.SaveFile(file, filePath)
+    if err != nil {
+      hlog.Error("Failed to save file:", err)
+    }
+  }()
+
   reqCtx.JSON(http.StatusOK, utils.H{
     "code":   200,
     "imgUrl": url,
