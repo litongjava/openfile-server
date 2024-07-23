@@ -2,10 +2,13 @@ package handler
 
 import (
   "context"
+  "database/sql"
   "fmt"
   "github.com/cloudwego/hertz/pkg/app"
+  "github.com/cloudwego/hertz/pkg/common/hlog"
   "github.com/cloudwego/hertz/pkg/common/utils"
   "github.com/cloudwego/hertz/pkg/protocol/consts"
+  "github.com/litongjava/openfile-server/can"
   "github.com/litongjava/openfile-server/myutils"
   "log"
   "net/http"
@@ -63,21 +66,82 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
     return
   }
 
-  suffix := strings.ToLower(filepath.Ext(file.Filename))
+  category, hasCategory := reqCtx.GetPostForm("category")
+  fold := category
+  if !hasCategory {
+    fold = time.Now().Format("20060102")
+  }
 
-  fold := time.Now().Format("20060102")
-  filePath, err := myutils.SaveFile(file, baseDir, fold, suffix)
+  suffix := strings.ToLower(filepath.Ext(file.Filename))
+  md5Sum, err := myutils.CalculateFileMD5(file)
   if err != nil {
     reqCtx.JSON(http.StatusInternalServerError, utils.H{
       "code": 0,
-      "data": "Failed to save file",
+      "data": "Failed to calculate file MD5",
     })
     return
   }
 
+  // Check if file already exists in DB
+  existingURL, err := getExistingFileURL(md5Sum)
+  if err == nil && existingURL != "" {
+    reqCtx.JSON(http.StatusOK, utils.H{
+      "code":   200,
+      "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
+      "data":   existingURL,
+    })
+    return
+  }
+
+  filePath, err := myutils.GenerateFilePath(baseDir, fold, suffix)
+  if err != nil {
+    reqCtx.JSON(http.StatusInternalServerError, utils.H{
+      "code": 0,
+      "data": "Failed to generate file path",
+    })
+    return
+  }
+
+  url := myutils.GetFullHostURL(reqCtx.URI())
+  err = saveFileInfoToDB(md5Sum, filePath)
+  if err != nil {
+    reqCtx.JSON(http.StatusOK, utils.H{
+      "code":   -1,
+      "imgUrl": url,
+      "data":   filePath,
+      "error":  err.Error(),
+    })
+    return
+  }
+
+  // Asynchronously save the file
+  go func() {
+    err := myutils.SaveFile(file, filePath)
+    if err != nil {
+      hlog.Error("Failed to save file:", err)
+      // Handle error (e.g., remove DB entry)
+    }
+  }()
+
   reqCtx.JSON(http.StatusOK, utils.H{
     "code":   200,
-    "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
+    "imgUrl": url,
     "data":   filePath,
   })
+}
+
+func saveFileInfoToDB(md5Sum, filePath string) error {
+  insertSQL := "INSERT INTO open_files(md5,url) VALUES(?,?)"
+  _, err := can.Db.Exec(insertSQL, md5Sum, filePath)
+  return err
+}
+
+func getExistingFileURL(md5Sum string) (string, error) {
+  selectSQL := "SELECT url FROM open_files WHERE md5=?"
+  var url string
+  err := can.Db.QueryRow(selectSQL, md5Sum).Scan(&url)
+  if err == sql.ErrNoRows {
+    return "", nil
+  }
+  return url, err
 }

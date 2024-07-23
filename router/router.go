@@ -11,7 +11,7 @@ import (
 
 func RegisterHadlder(h *server.Hertz) {
   h.GET("/ping", handler.PingHandler)
-  h.GET("/TestHanlder", handler.TestHandler)
+  h.GET("/test", handler.TestHandler)
 
   h.POST("/upload/:username/:repositoryName/*subFolder", handler.UploadHandler)
 

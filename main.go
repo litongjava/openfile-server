@@ -4,6 +4,7 @@ import (
   "flag"
   "github.com/cloudwego/hertz/pkg/app/server"
   "github.com/hertz-contrib/cors"
+  "github.com/litongjava/openfile-server/can"
   "github.com/litongjava/openfile-server/router"
   "strconv"
   "time"
@@ -12,6 +13,7 @@ import (
 func main() {
   port := flag.Int("port", 9000, "server port.")
   flag.Parse()
+  can.OpenDb()
   addr := ":" + strconv.Itoa(*port)
 
   h := server.New(server.WithHostPorts("0.0.0.0"+addr), server.WithMaxRequestBodySize(600<<20))
