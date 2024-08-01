@@ -33,7 +33,6 @@ func RegisterHadlder(h *server.Hertz) {
   })
 
   h.GET("/url", handler.GetUrl)
-
   //h.StaticFS("/file", "./file")
   //h.StaticFS("/file", &app.FS{Root: ""})
   h.StaticFS("/file", &app.FS{
@@ -41,9 +40,8 @@ func RegisterHadlder(h *server.Hertz) {
     PathNotFound: func(_ context.Context, ctx *app.RequestContext) {
       ctx.JSON(consts.StatusNotFound, "The requested resource does not exist")
     },
-    CacheDuration:      time.Second * 5,
-    AcceptByteRange:    true,
-    GenerateIndexPages: true,
+    CacheDuration:   time.Second * 5,
+    AcceptByteRange: true,
   })
   h.StaticFS("/s", &app.FS{
     Root: "",
