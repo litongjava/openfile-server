@@ -53,10 +53,32 @@ systemctl status openfile-server
 ### 配置nginx
 /etc/nginx/common_file_locations.conf
 ```shell
-common_file_locations.conf
 location /file {
+  # 处理 OPTIONS 请求
+  if ($request_method = 'OPTIONS') {
+    add_header Access-Control-Allow-Origin *;
+    add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+    add_header Access-Control-Allow-Headers 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+    add_header Content-Length 0;
+    add_header Content-Type text/plain;
+    return 204;
+  }
+
+  add_header Access-Control-Allow-Origin *;
+  add_header Access-Control-Allow-Methods 'GET, POST, OPTIONS';
+  add_header Access-Control-Allow-Headers 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+  add_header Access-Control-Expose-Headers 'Content-Length,Content-Range';
+  
   root /data/apps/openfile-server;
+  
+  # 开启缓存
+  proxy_cache file_cache;
+  proxy_cache_valid 200 1h;
+  proxy_cache_valid 404 1m;
+  add_header X-Cache-Status $upstream_cache_status;
+
 }
+
 
 location /s {
   root /data/apps/openfile-server;
@@ -149,7 +171,7 @@ location /uploadDoc {
 upstream file_server {
   server 127.0.0.1:9000;
 }
-
+proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=file_cache:10m max_size=10g inactive=60m use_temp_path=off;
 
 server {
   listen 8568;

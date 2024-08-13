@@ -41,18 +41,33 @@ func GenerateFilePath(baseDir, fold, suffix string) (string, error) {
 }
 
 func SaveFile(file *multipart.FileHeader, filePath string) error {
+  // 获取目录路径
+  dir := filepath.Dir(filePath)
+
+  // 检查目录是否存在
+  if _, err := os.Stat(dir); os.IsNotExist(err) {
+    // 创建目录
+    err := os.MkdirAll(dir, os.ModePerm)
+    if err != nil {
+      return err
+    }
+  }
+
+  // 打开源文件
   src, err := file.Open()
   if err != nil {
     return err
   }
   defer src.Close()
 
+  // 创建目标文件
   dst, err := os.Create(filePath)
   if err != nil {
     return err
   }
   defer dst.Close()
 
+  // 复制文件内容
   _, err = io.Copy(dst, src)
   return err
 }

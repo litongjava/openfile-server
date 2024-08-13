@@ -91,8 +91,12 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
         err := myutils.SaveFile(file, existingURL)
         if err != nil {
           hlog.Error("Failed to save file:", err)
+        } else {
+          hlog.Info("old file save success")
         }
       }()
+    } else {
+      hlog.Info("file exists")
     }
     reqCtx.JSON(http.StatusOK, utils.H{
       "code":   200,
