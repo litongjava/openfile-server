@@ -22,7 +22,7 @@ func RegisterHadlder(h *server.Hertz) {
     handler.Upload(ctx, "file/video/")
   })
   h.POST("/uploadMp3", func(c context.Context, ctx *app.RequestContext) {
-    handler.Upload(ctx, "file/video/")
+    handler.Upload(ctx, "file/audio/")
   })
   h.POST("/uploadDoc", func(c context.Context, ctx *app.RequestContext) {
     handler.Upload(ctx, "file/doc/")
