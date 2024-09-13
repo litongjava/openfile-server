@@ -38,7 +38,7 @@ User=root
 Restart=on-failure
 RestartSec=5s
 WorkingDirectory=/data/apps/openfile-server
-ExecStart=/usr/local/bin/openfile-server
+ExecStart=/data/apps/openfile-server/openfile-server
 
 [Install]
 WantedBy=multi-user.target
@@ -48,11 +48,25 @@ WantedBy=multi-user.target
 systemctl enable openfile-server
 systemctl start openfile-server
 systemctl status openfile-server
+systemctl restart openfile-server
 ```
 
 ### 配置nginx
 /etc/nginx/common_file_locations.conf
 ```shell
+# thumbnail
+location ~* /file/(.*)_(\d+)x(\d+)\.(jpg|jpeg|png|gif)$ {  
+  proxy_pass http://file_server;
+  proxy_pass_header Set-Cookie;
+  proxy_set_header Host $host:$server_port;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+  error_log  /var/log/nginx/backend.error.log;
+  access_log  /var/log/nginx/backend.access.log;
+}
 location /file {
   # 处理 OPTIONS 请求
   if ($request_method = 'OPTIONS') {
@@ -76,7 +90,6 @@ location /file {
   proxy_cache_valid 200 1h;
   proxy_cache_valid 404 1m;
   add_header X-Cache-Status $upstream_cache_status;
-
 }
 
 
