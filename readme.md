@@ -196,3 +196,85 @@ file list
 http://localhost:8080/s/
 ```
 
+## Thumbnail Configuration - Using Nginx `image_filter` Module
+
+This document explains how to use Nginx's `image_filter` module to dynamically generate image thumbnails by specifying width and height in the request.
+
+### 1. Check if the `image_filter` module is installed
+
+To handle image resizing in Nginx, the `image_filter` module is required. You can check if this module is installed with the following command:
+
+```bash
+nginx -V 2>&1 | grep image_filter
+```
+
+If the output includes `--with-http_image_filter_module`, the module is installed. If not, you can recompile Nginx with this module enabled or use the official precompiled package provided by Nginx.
+### 2. load ngx_http_image_filter_module
+```cgo
+--with-http_image_filter_module=dynamic
+```
+if dynamic please load module
+```cgo
+load_module modules/ngx_http_image_filter_module.so;
+
+```
+### 3. Nginx Configuration
+
+Below is an example configuration using the `image_filter` module to resize images:
+
+```nginx
+location ~* /file/(.*)_(\d+)x(\d+)\.(jpg|jpeg|png|gif)$ {
+  # Extract the image name, width, and height
+  set $image_name $1;
+  set $width $2;
+  set $height $3;
+
+  # Apply image resizing
+  image_filter resize $width $height;
+  
+  # Set JPEG quality to 70 to reduce file size (default is 75)
+  image_filter_jpeg_quality 70;
+
+  # Configure buffer size to avoid memory overflow when processing large images
+  image_filter_buffer 100M;
+
+  # Set the returned image type based on the file extension
+  default_type image/$4;
+
+  # Use alias instead of root to match the actual image path
+  alias /data/apps/openfile-server/file/$image_name.$4;
+}
+```
+
+#### Explanation:
+
+- **location matching rule**: Matches image requests starting with `/file/`, where the name includes width and height parameters (e.g., `_100x100`). In the regular expression, `$1` represents the image name, `$2` and `$3` represent width and height, and `$4` represents the image extension (`jpg`, `jpeg`, `png`, `gif`).
+
+- **`set` directive**: Assigns the captured groups from the regular expression to `$image_name` (original image name), `$width` (width), and `$height` (height).
+
+- **`image_filter resize`**: Uses the `image_filter` module to resize the image to the specified width and height.
+
+- **`image_filter_jpeg_quality`**: Adjusts the JPEG image compression quality. It's set to 70 here to balance image quality and file size.
+
+- **`image_filter_buffer`**: Specifies the buffer size to prevent memory overflow when processing large images. A larger value, such as `100M`, is recommended.
+
+- **`default_type`**: Returns the correct `MIME` type based on the image extension, ensuring the browser renders the image correctly.
+
+- **`alias` directive**: Maps to the actual image path on the server using `alias` instead of `root` to avoid path confusion. In this case, images are stored in the `/data/apps/openfile-server/file/` directory.
+
+### 4. Testing Access
+
+You can test the setup using the following URLs:
+
+- **Original image access**:  
+  `http://192.168.3.9:8568/file/images/200-dpi.png`
+
+- **Thumbnail access (100x100 size)**:  
+  `http://192.168.3.9:8568/file/images/200-dpi_100x100.png`
+
+### 5. Notes
+
+- The `image_filter` module dynamically processes images, which may consume significant CPU and memory resources, especially in high-concurrency environments. It is recommended to implement a caching mechanism or pre-generate thumbnails to reduce server load.
+- For large-scale image resizing, consider caching frequently used thumbnails in a CDN or on disk to further reduce server load.
+
+With this configuration, Nginx can dynamically generate thumbnails based on the requested width and height, allowing users to access images in different sizes efficiently.
