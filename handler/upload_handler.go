@@ -2,13 +2,11 @@ package handler
 
 import (
   "context"
-  "database/sql"
   "fmt"
   "github.com/cloudwego/hertz/pkg/app"
   "github.com/cloudwego/hertz/pkg/common/hlog"
   "github.com/cloudwego/hertz/pkg/common/utils"
   "github.com/cloudwego/hertz/pkg/protocol/consts"
-  "github.com/litongjava/openfile-server/can"
   "github.com/litongjava/openfile-server/myutils"
   "log"
   "net/http"
@@ -83,7 +81,7 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
   }
 
   // Check if file already exists in DB
-  existingURL, err := getExistingFileURL(md5Sum)
+  existingURL, err := GetExistingFileURL(md5Sum)
   if err == nil && existingURL != "" {
     _, err := os.Stat(existingURL)
     if os.IsNotExist(err) {
@@ -99,10 +97,10 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
       hlog.Info("file exists")
     }
     reqCtx.JSON(http.StatusOK, utils.H{
-      "code":   200,
-      "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
-      "data":   existingURL,
-      "md5":    md5Sum,
+      "code": 200,
+      "url":  myutils.GetFullHostURL(reqCtx.URI()),
+      "data": existingURL,
+      "md5":  md5Sum,
     })
     return
   }
@@ -117,14 +115,14 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
   }
 
   url := myutils.GetFullHostURL(reqCtx.URI())
-  err = saveFileInfoToDB(md5Sum, filePath)
+  err = SaveFileInfoToDB(md5Sum, filePath)
   if err != nil {
     reqCtx.JSON(http.StatusOK, utils.H{
-      "code":   -1,
-      "imgUrl": url,
-      "data":   filePath,
-      "md5":    md5Sum,
-      "error":  err.Error(),
+      "code":  -1,
+      "url":   url,
+      "data":  filePath,
+      "md5":   md5Sum,
+      "error": err.Error(),
     })
     return
   }
@@ -137,25 +135,9 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
   }()
 
   reqCtx.JSON(http.StatusOK, utils.H{
-    "code":   200,
-    "imgUrl": url,
-    "data":   filePath,
-    "md5":    md5Sum,
+    "code": 200,
+    "url":  url,
+    "data": filePath,
+    "md5":  md5Sum,
   })
-}
-
-func saveFileInfoToDB(md5Sum, filePath string) error {
-  insertSQL := "INSERT INTO open_files(md5,url) VALUES(?,?)"
-  _, err := can.Db.Exec(insertSQL, md5Sum, filePath)
-  return err
-}
-
-func getExistingFileURL(md5Sum string) (string, error) {
-  selectSQL := "SELECT url FROM open_files WHERE md5=?"
-  var url string
-  err := can.Db.QueryRow(selectSQL, md5Sum).Scan(&url)
-  if err == sql.ErrNoRows {
-    return "", nil
-  }
-  return url, err
 }

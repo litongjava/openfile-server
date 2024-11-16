@@ -10,6 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/sony/sonyflake v1.2.0
 	golang.org/x/image v0.20.0
 )
 

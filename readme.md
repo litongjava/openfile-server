@@ -19,7 +19,11 @@ docker run -dit --name=openfile-server -p 8080:80 litongjava/openfile-server:1.0
 ```
 ### cmd
 ```shell
-go build
+sudo apt-get update
+sudo apt-get install libwebp-dev -y
+sudo apt-get install gcc -y
+CGO_ENABLED=1 go build
+
 ```
 ### openfile-server.service
 
