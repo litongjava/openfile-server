@@ -23,7 +23,17 @@ sudo apt-get update
 sudo apt-get install libwebp-dev -y
 sudo apt-get install gcc -y
 CGO_ENABLED=1 go build
+```
 
+```shell
+link: github.com/bytedance/sonic/ast: invalid reference to encoding/json.safeSet
+```
+```shell
+go get -u github.com/bytedance/sonic
+```
+run
+```shell
+/data/apps/openfile-server/openfile-server
 ```
 ### openfile-server.service
 

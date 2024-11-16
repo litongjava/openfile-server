@@ -63,6 +63,12 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
     _, err := os.Stat(filePath)
     if !os.IsNotExist(err) {
       hlog.Info("file exists")
+    } else {
+      // 保存主文件
+      err := myutils.SaveFile(file, filePath)
+      if err != nil {
+        hlog.Error("Failed to save file:", err)
+      }
     }
   } else {
     // 生成文件保存路径
@@ -87,14 +93,11 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
       })
       return
     }
-
     // 保存主文件
-    go func() {
-      err := myutils.SaveFile(file, filePath)
-      if err != nil {
-        hlog.Error("Failed to save file:", err)
-      }
-    }()
+    err := myutils.SaveFile(file, filePath)
+    if err != nil {
+      hlog.Error("Failed to save file:", err)
+    }
   }
 
   // 检查是否为视频文件
@@ -111,7 +114,7 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
     // 获取视频时长
     duration, err := myutils.GetVideoDuration(filePath)
     if err != nil {
-      hlog.Error("Failed to get video duration:", err)
+      hlog.Error("Failed to get video duration:", filePath+" ", err)
     } else {
       var frameCount int
       if duration >= 10 {
