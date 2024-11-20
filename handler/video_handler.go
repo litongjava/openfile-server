@@ -28,7 +28,13 @@ func VideoFrames(ctx context.Context, reqCtx *app.RequestContext) {
       })
       return
     }
-    frameArray = strings.Split(framesString, ",")
+    if framesString != "" {
+      frameArray = strings.Split(framesString, ",")
+    } else {
+      var fold = time.Now().Format("20060102")
+      frameArray = ExtraFrames(filePath, fold)
+    }
+
   } else {
     md5Sum, err := GetMd5ByFiepath(filePath)
     if err != nil {
