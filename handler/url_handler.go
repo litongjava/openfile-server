@@ -39,10 +39,10 @@ func GetUrl(ctx context.Context, reqCtx *app.RequestContext) {
     }
 
     reqCtx.JSON(http.StatusOK, utils.H{
-      "code":   200,
-      "imgUrl": myutils.GetFullHostURL(reqCtx.URI()),
-      "data":   existingURL,
-      "md5":    md5Sum,
+      "code": 200,
+      "url":  myutils.GetFullHostURL(reqCtx.URI()),
+      "data": existingURL,
+      "md5":  md5Sum,
     })
     return
   }

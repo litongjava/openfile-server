@@ -1,7 +1,6 @@
 package handler
 
 import (
-  "fmt"
   "github.com/cloudwego/hertz/pkg/app"
   "github.com/cloudwego/hertz/pkg/common/hlog"
   "github.com/cloudwego/hertz/pkg/common/utils"
@@ -59,6 +58,7 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
 
   // Check if file already exists in DB
   filePath, err := GetExistingFileURL(md5Sum)
+  var frameArray []string
   if err == nil && filePath != "" {
     _, err := os.Stat(filePath)
     if !os.IsNotExist(err) {
@@ -70,6 +70,15 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
         hlog.Error("Failed to save file:", err)
       }
     }
+    err, framesString := GetVideoFramesFromDb(filePath)
+    if err != nil {
+      reqCtx.JSON(http.StatusInternalServerError, utils.H{
+        "code": 0,
+        "data": err.Error(),
+      })
+      return
+    }
+    frameArray = strings.Split(framesString, ",")
   } else {
     // 生成文件保存路径
     filePath, err = myutils.GenerateFilePath(baseDir, fold, suffix)
@@ -98,58 +107,18 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
     if err != nil {
       hlog.Error("Failed to save file:", err)
     }
-  }
-
-  // 检查是否为视频文件
-  isVideo := false
-  videoExtensions := map[string]bool{
-    ".mp4": true, ".avi": true, ".mov": true, ".mkv": true, ".flv": true,
-  }
-  if videoExtensions[suffix] {
-    isVideo = true
-  }
-
-  var frames []string
-  if isVideo {
-    // 获取视频时长
-    duration, err := myutils.GetVideoDuration(filePath)
-    if err != nil {
-      hlog.Error("Failed to get video duration:", filePath+" ", err)
-    } else {
-      var frameCount int
-      if duration >= 10 {
-        frameCount = 10
-      } else {
-        frameCount = int(duration)
-        if frameCount < 1 {
-          frameCount = 1
-        }
-      }
-
-      // 提取关键帧
-      frameDir := filepath.Join("file", "frames", fold)
-      framePaths, err := myutils.ExtractKeyFrames(filePath, frameDir, frameCount)
-      if err != nil {
-        hlog.Error("Failed to extract key frames:", err)
-      } else {
-        for _, framePath := range framePaths {
-          // 生成雪花ID作为文件名
-          snowflakeID := myutils.GenerateSnowflakeID()
-          newFrameFilename := fmt.Sprintf("%s%s", snowflakeID, filepath.Ext(framePath))
-          newFramePath := filepath.Join(filepath.Dir(framePath), newFrameFilename)
-
-          // 重命名帧文件，确保使用正斜杠
-          err := os.Rename(framePath, newFramePath)
-          if err != nil {
-            hlog.Error("Failed to rename frame file:", err)
-            continue
-          }
-          var relativeFramePath = filepath.ToSlash(newFramePath)
-
-          // 添加到 frames 列表
-          frames = append(frames, relativeFramePath)
-        }
-      }
+    // 检查是否为视频文件
+    isVideo := false
+    videoExtensions := map[string]bool{
+      ".mp4": true, ".avi": true, ".mov": true, ".mkv": true, ".flv": true,
+    }
+    if videoExtensions[suffix] {
+      isVideo = true
+    }
+    if isVideo {
+      frameArray = ExtraFrames(filePath, fold)
+      result := strings.Join(frameArray, ",")
+      SaveVideoFramesToDB(md5Sum, filePath, result)
     }
   }
 
@@ -159,7 +128,7 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
     URL:    urlPrefix,
     Data:   filePath,
     MD5:    md5Sum,
-    Frames: frames,
+    Frames: frameArray,
   }
 
   reqCtx.JSON(http.StatusOK, response)

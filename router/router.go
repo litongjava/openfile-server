@@ -30,11 +30,11 @@ func RegisterHadlder(h *server.Hertz) {
   })
 
   h.POST("/upload", func(c context.Context, ctx *app.RequestContext) {
-
     handler.Upload(ctx, can.DEFAULT_FILE_PATH+"/")
   })
 
   h.GET("/url", handler.GetUrl)
+  h.GET("/video/frames", handler.VideoFrames)
   h.GET("/file/*filepath", handler.GetFile)
 
   //h.StaticFS("/file", "./file")
