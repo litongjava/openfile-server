@@ -14,47 +14,55 @@ func VideoFrames(ctx context.Context, reqCtx *app.RequestContext) {
   filePath := reqCtx.Query("uri")
 
   var frameArray []string
-  if filePath != "" {
-    _, err := os.Stat(filePath)
-    if os.IsNotExist(err) {
-      reqCtx.String(400, "file is not exists")
-      return
-    }
-    err, framesString := GetVideoFramesFromDb(filePath)
-    if err != nil {
-      reqCtx.JSON(http.StatusInternalServerError, utils.H{
-        "code": 0,
-        "data": err.Error(),
-      })
-      return
-    }
-    if framesString != "" {
-      frameArray = strings.Split(framesString, ",")
-    } else {
-      var fold = time.Now().Format("20060102")
-      frameArray = ExtraFrames(filePath, fold)
-    }
-
-  } else {
-    md5Sum, err := GetMd5ByFiepath(filePath)
-    if err != nil {
-      reqCtx.JSON(400, utils.H{
-        "code": 0,
-        "data": err.Error(),
-      })
-      return
-    }
-    var fold = time.Now().Format("20060102")
-    frameArray = ExtraFrames(filePath, fold)
-    result := strings.Join(frameArray, ",")
-    SaveVideoFramesToDB(md5Sum, filePath, result)
+  if filePath == "" {
+    reqCtx.String(400, "no such file")
+    return
+  }
+  _, err := os.Stat(filePath)
+  if os.IsNotExist(err) {
+    reqCtx.String(400, "file is not exists")
+    return
   }
 
-  // 构建响应
+  err, framesString := GetVideoFramesFromDb(filePath)
+  if err != nil {
+    reqCtx.JSON(http.StatusInternalServerError, utils.H{
+      "code": 0,
+      "data": err.Error(),
+    })
+    return
+  }
+
+  if framesString != "" {
+    frameArray = strings.Split(framesString, ",")
+    // 构建响应
+    response := UploadVideoResponse{
+      Code:   200,
+      Data:   filePath,
+      Frames: frameArray,
+    }
+    reqCtx.JSON(http.StatusOK, response)
+    return
+  }
+  md5Sum, err := GetMd5ByFiepath(filePath)
+  if err != nil {
+    reqCtx.JSON(400, utils.H{
+      "code": 0,
+      "data": err.Error(),
+    })
+    return
+  }
+
+  var fold = time.Now().Format("20060102")
+  frameArray = ExtraFrames(filePath, fold)
+  result := strings.Join(frameArray, ",")
+  SaveVideoFramesToDB(md5Sum, filePath, result)
+
   response := UploadVideoResponse{
     Code:   200,
     Data:   filePath,
     Frames: frameArray,
   }
   reqCtx.JSON(http.StatusOK, response)
+  return
 }
