@@ -57,7 +57,7 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
   urlPrefix := myutils.GetFullHostURL(reqCtx.URI())
 
   // Check if file already exists in DB
-  filePath, err := GetExistingFileURL(md5Sum)
+  filePath, err := GetFilepathFromDb(md5Sum)
   var frameArray []string
   if err == nil && filePath != "" {
     _, err := os.Stat(filePath)
@@ -78,48 +78,64 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
       })
       return
     }
-    frameArray = strings.Split(framesString, ",")
-  } else {
-    // 生成文件保存路径
-    filePath, err = myutils.GenerateFilePath(baseDir, fold, suffix)
-    if err != nil {
-      reqCtx.JSON(http.StatusInternalServerError, utils.H{
-        "code": 0,
-        "data": "Failed to generate file path",
-      })
-      return
-    }
-
-    // 保存文件信息到数据库
-    err = SaveFileInfoToDB(md5Sum, filePath)
-    if err != nil {
-      reqCtx.JSON(http.StatusOK, utils.H{
-        "code":  -1,
-        "url":   urlPrefix,
-        "data":  filePath,
-        "md5":   md5Sum,
-        "error": err.Error(),
-      })
-      return
-    }
-    // 保存主文件
-    err := myutils.SaveFile(file, filePath)
-    if err != nil {
-      hlog.Error("Failed to save file:", err)
-    }
-    // 检查是否为视频文件
-    isVideo := false
-    videoExtensions := map[string]bool{
-      ".mp4": true, ".avi": true, ".mov": true, ".mkv": true, ".flv": true,
-    }
-    if videoExtensions[suffix] {
-      isVideo = true
-    }
-    if isVideo {
+    if framesString != "" {
+      frameArray = strings.Split(framesString, ",")
+    } else {
       frameArray = ExtraFrames(filePath, fold)
       result := strings.Join(frameArray, ",")
       SaveVideoFramesToDB(md5Sum, filePath, result)
     }
+
+    // 构建响应
+    response := UploadVideoResponse{
+      Code:   200,
+      URL:    urlPrefix,
+      Data:   filePath,
+      MD5:    md5Sum,
+      Frames: frameArray,
+    }
+    reqCtx.JSON(http.StatusOK, response)
+    return
+  }
+  // 生成文件保存路径
+  filePath, err = myutils.GenerateFilePath(baseDir, fold, suffix)
+  if err != nil {
+    reqCtx.JSON(http.StatusInternalServerError, utils.H{
+      "code": 0,
+      "data": "Failed to generate file path",
+    })
+    return
+  }
+
+  // 保存文件信息到数据库
+  err = SaveFileInfoToDB(md5Sum, filePath)
+  if err != nil {
+    reqCtx.JSON(http.StatusOK, utils.H{
+      "code":  -1,
+      "url":   urlPrefix,
+      "data":  filePath,
+      "md5":   md5Sum,
+      "error": err.Error(),
+    })
+    return
+  }
+  // 保存主文件
+  err = myutils.SaveFile(file, filePath)
+  if err != nil {
+    hlog.Error("Failed to save file:", err)
+  }
+  // 检查是否为视频文件
+  isVideo := false
+  videoExtensions := map[string]bool{
+    ".mp4": true, ".avi": true, ".mov": true, ".mkv": true, ".flv": true,
+  }
+  if videoExtensions[suffix] {
+    isVideo = true
+  }
+  if isVideo {
+    frameArray = ExtraFrames(filePath, fold)
+    result := strings.Join(frameArray, ",")
+    SaveVideoFramesToDB(md5Sum, filePath, result)
   }
 
   // 构建响应

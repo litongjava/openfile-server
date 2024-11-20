@@ -81,7 +81,7 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
   }
 
   // Check if file already exists in DB
-  existingURL, err := GetExistingFileURL(md5Sum)
+  existingURL, err := GetFilepathFromDb(md5Sum)
   if err == nil && existingURL != "" {
     _, err := os.Stat(existingURL)
     if os.IsNotExist(err) {

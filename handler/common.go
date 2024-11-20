@@ -26,7 +26,7 @@ func GetMd5ByFiepath(filepath string) (string, error) {
   return md5, err
 }
 
-func GetExistingFileURL(md5Sum string) (string, error) {
+func GetFilepathFromDb(md5Sum string) (string, error) {
   selectSQL := "SELECT url FROM open_files WHERE md5=?"
   var url string
   err := can.Db.QueryRow(selectSQL, md5Sum).Scan(&url)
