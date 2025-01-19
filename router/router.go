@@ -22,8 +22,8 @@ func RegisterHadlder(h *server.Hertz) {
   h.POST("/uploadVideo", func(c context.Context, ctx *app.RequestContext) {
     handler.UploadVideo(ctx, can.DEFAULT_FILE_PATH+"/video/")
   })
-  h.POST("/uploadMp3", func(c context.Context, ctx *app.RequestContext) {
-    handler.Upload(ctx, can.DEFAULT_FILE_PATH+"/audio/")
+  h.POST("/uploadAudio", func(c context.Context, ctx *app.RequestContext) {
+    handler.UploadAudio(ctx, can.DEFAULT_FILE_PATH+"/audio/")
   })
   h.POST("/uploadDoc", func(c context.Context, ctx *app.RequestContext) {
     handler.Upload(ctx, can.DEFAULT_FILE_PATH+"/doc/")

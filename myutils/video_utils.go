@@ -65,6 +65,26 @@ func GetVideoDuration(videoPath string) (float64, error) {
   return duration, nil
 }
 
+// GetAudioDuration 使用 ffprobe 获取音频时长（秒），返回类型为 int8
+func GetAudioDuration(audioPath string) (string, error) {
+  cmd := exec.Command("ffprobe",
+    "-v", "error",
+    "-show_entries", "format=duration",
+    "-of", "default=noprint_wrappers=1:nokey=1",
+    audioPath,
+  )
+
+  var out bytes.Buffer
+  cmd.Stdout = &out
+  err := cmd.Run()
+  if err != nil {
+    return "", err
+  }
+
+  durationStr := strings.TrimSpace(out.String())
+  return durationStr, nil
+}
+
 // ExtractKeyFrames 使用 FFmpeg 提取视频的关键帧
 func ExtractKeyFrames(videoPath string, outputDir string, frameCount int) ([]string, error) {
   // 确保输出目录存在

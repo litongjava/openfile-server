@@ -26,6 +26,12 @@ func GetMd5ByFiepath(filepath string) (string, error) {
   return md5, err
 }
 
+func SaveAudioFileInfoToDB(md5Sum, filePath, extra string) error {
+  insertSQL := "INSERT INTO open_files(md5,url,extra) VALUES(?,?,?)"
+  _, err := can.Db.Exec(insertSQL, md5Sum, filePath, extra)
+  return err
+}
+
 func GetFilepathFromDb(md5Sum string) (string, error) {
   selectSQL := "SELECT url FROM open_files WHERE md5=?"
   var url string
@@ -43,6 +49,16 @@ func SaveVideoFramesToDB(md5Sum, filePath, frames string) error {
 }
 
 func GetVideoFramesFromDb(uri string) (error, string) {
+  selectSQL := "SELECT extra FROM open_files WHERE url=?"
+  var extra string
+  err := can.Db.QueryRow(selectSQL, uri).Scan(&extra)
+  if err == sql.ErrNoRows {
+    return nil, ""
+  }
+  return err, extra
+}
+
+func QueryAudioLengthFromDb(uri string) (error, string) {
   selectSQL := "SELECT frames FROM open_file_frames WHERE url=?"
   var frames string
   err := can.Db.QueryRow(selectSQL, uri).Scan(&frames)
