@@ -1,7 +1,7 @@
 create table if not exists "open_files" (
   "md5" TEXT NOT NULL,
   "url" INTEGER,
-  "extra" text
+  "extra" text,
   PRIMARY KEY ("md5")
 );
 
