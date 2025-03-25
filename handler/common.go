@@ -49,7 +49,7 @@ func SaveVideoFramesToDB(md5Sum, filePath, frames string) error {
 }
 
 func GetVideoFramesFromDb(uri string) (error, string) {
-  selectSQL := "SELECT extra FROM open_file_frames WHERE url=?"
+  selectSQL := "SELECT frames FROM open_file_frames WHERE url=?"
   var extra string
   err := can.Db.QueryRow(selectSQL, uri).Scan(&extra)
   if err == sql.ErrNoRows {
@@ -59,7 +59,7 @@ func GetVideoFramesFromDb(uri string) (error, string) {
 }
 
 func QueryAudioLengthFromDb(uri string) (error, string) {
-  selectSQL := "SELECT frames FROM open_files WHERE url=?"
+  selectSQL := "SELECT extra FROM open_files WHERE url=?"
   var frames string
   err := can.Db.QueryRow(selectSQL, uri).Scan(&frames)
   if err == sql.ErrNoRows {
