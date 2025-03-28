@@ -37,13 +37,13 @@ func main() {
   //跨域中间件
   //app.HandlerFunc
   corsFunction := cors.New(cors.Config{
-    AllowAllOrigins:  true,                                     //允许所有origin的请求
-    AllowMethods:     []string{"GET", "PUT", "POST", "DELETE"}, //允许的方法
-    AllowHeaders:     []string{"Origin"},                       //允许的头部
-    ExposeHeaders:    []string{"Content-Length"},               //暴漏的头部信息
-    AllowCredentials: true,                                     //允许携带证书
-    AllowWildcard:    true,                                     //允许使用通配符匹配
-    MaxAge:           12 * time.Hour,                           //请求缓存的最长时间
+    AllowAllOrigins:  true,                                     // 允许所有 origin 的请求
+    AllowMethods:     []string{"GET", "PUT", "POST", "DELETE"}, // 允许的方法
+    AllowHeaders:     []string{"Origin", "Content-Type"},       // 允许的头部（添加了 Content-Type）
+    ExposeHeaders:    []string{"Content-Length"},               // 暴露的头部信息
+    AllowCredentials: true,                                     // 允许携带证书
+    AllowWildcard:    true,                                     // 允许使用通配符匹配
+    MaxAge:           12 * time.Hour,                           // 请求缓存的最长时间
   })
 
   h.Use(corsFunction)

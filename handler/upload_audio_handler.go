@@ -72,6 +72,7 @@ func UploadAudio(reqCtx *app.RequestContext, baseDir string) {
     }
     err, duration = QueryAudioLengthFromDb(filePath)
     if err != nil {
+      hlog.Error(err.Error())
       reqCtx.JSON(http.StatusInternalServerError, utils.H{
         "code": 0,
         "data": err.Error(),
