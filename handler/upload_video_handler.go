@@ -34,12 +34,12 @@ func UploadVideo(reqCtx *app.RequestContext, baseDir string) {
   }
 
   // 获取分类（如果有）
-  category, hasCategory := reqCtx.GetPostForm("category")
-  fold := category
-  if !hasCategory {
-    fold = time.Now().Format("20060102")
-  }
 
+  category, hasCategory := reqCtx.GetPostForm("category")
+  if !hasCategory {
+    category = "default"
+  }
+  fold := category + "/" + time.Now().Format("20060102")
   // 获取文件后缀名并转换为小写
   suffix := strings.ToLower(filepath.Ext(file.Filename))
 
