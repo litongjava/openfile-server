@@ -65,10 +65,10 @@ func Upload(reqCtx *app.RequestContext, baseDir string) {
   }
 
   category, hasCategory := reqCtx.GetPostForm("category")
-  fold := category
   if !hasCategory {
-    fold = time.Now().Format("20060102")
+    category = "default"
   }
+  fold := category + "/" + time.Now().Format("20060102")
 
   suffix := strings.ToLower(filepath.Ext(file.Filename))
   md5Sum, err := myutils.CalculateFileMD5(file)
