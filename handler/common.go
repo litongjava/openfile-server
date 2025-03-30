@@ -48,6 +48,40 @@ func SaveVideoFramesToDB(md5Sum, filePath, frames string) error {
   return err
 }
 
+func DeleteFileAndFramesByUrl(url string) error {
+  // 开启事务
+  tx, err := can.Db.Begin()
+  if err != nil {
+    return err
+  }
+
+  // 定义一个用于回滚的辅助函数
+  rollback := func() {
+    _ = tx.Rollback()
+  }
+
+  // 从 open_files 表中删除记录
+  deleteFilesSQL := "DELETE FROM open_files WHERE url = ?"
+  if _, err := tx.Exec(deleteFilesSQL, url); err != nil {
+    rollback()
+    return err
+  }
+
+  // 从 open_file_frames 表中删除记录
+  deleteFramesSQL := "DELETE FROM open_file_frames WHERE url = ?"
+  if _, err := tx.Exec(deleteFramesSQL, url); err != nil {
+    rollback()
+    return err
+  }
+
+  // 提交事务
+  if err := tx.Commit(); err != nil {
+    return err
+  }
+
+  return nil
+}
+
 func GetVideoFramesFromDb(uri string) (error, string) {
   selectSQL := "SELECT frames FROM open_file_frames WHERE url=?"
   var extra string

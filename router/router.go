@@ -33,6 +33,7 @@ func RegisterHadlder(h *server.Hertz) {
     handler.Upload(ctx, can.DEFAULT_FILE_PATH+"/")
   })
 
+  h.GET("/delete", handler.DeleteFile)
   h.GET("/url", handler.GetUrl)
   h.GET("/video/frames", handler.VideoFrames)
   h.GET("/file/*filepath", handler.GetFile)
