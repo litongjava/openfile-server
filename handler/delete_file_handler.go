@@ -17,7 +17,7 @@ func DeleteFile(ctx context.Context, reqCtx *app.RequestContext) {
     return
   }
   if !strings.HasPrefix(filePath, "file") {
-    reqCtx.JSON(http.StatusInternalServerError, utils.H{
+    reqCtx.JSON(http.StatusBadRequest, utils.H{
       "code":    0,
       "message": "url must starts with file",
     })
@@ -26,7 +26,7 @@ func DeleteFile(ctx context.Context, reqCtx *app.RequestContext) {
 
   // 检查文件是否存在
   if _, err := os.Stat(filePath); os.IsNotExist(err) {
-    reqCtx.JSON(http.StatusInternalServerError, utils.H{
+    reqCtx.JSON(http.StatusBadRequest, utils.H{
       "code":    0,
       "message": "no such file",
     })
