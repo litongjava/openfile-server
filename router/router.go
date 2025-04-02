@@ -34,6 +34,7 @@ func RegisterHadlder(h *server.Hertz) {
   })
 
   h.GET("/delete", handler.DeleteFile)
+  h.GET("/md5/:md5", handler.QueryFileByMD5Handler)
   h.GET("/url", handler.GetUrl)
   h.GET("/video/frames", handler.VideoFrames)
   h.GET("/file/*filepath", handler.GetFile)
