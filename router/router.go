@@ -33,6 +33,7 @@ func RegisterHadlder(h *server.Hertz) {
     handler.Upload(ctx, can.DEFAULT_FILE_PATH+"/")
   })
 
+  h.POST("/uploadZip", handler.UploadZip)
   h.GET("/delete", handler.DeleteFile)
   h.GET("/md5/:md5", handler.QueryFileByMD5Handler)
   h.GET("/url", handler.GetUrl)
