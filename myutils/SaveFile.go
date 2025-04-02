@@ -23,6 +23,26 @@ func GenerateFilePath(baseDir, fold, suffix string) (string, error) {
   return fullFilePath, nil
 }
 
+// GenerateFilePathWithName 生成文件保存路径，并返回文件完整路径，使用上传的原始文件名
+func GenerateFilePathWithName(baseDir, fold, fileName string) (string, error) {
+  // 创建上传目录
+  uploadDir := filepath.Join(baseDir, fold)
+  err := os.MkdirAll(uploadDir, os.ModePerm)
+  if err != nil {
+    return "", err
+  }
+
+  // 获取文件后缀名
+  // 使用原始文件名生成文件路径（保留原始文件名）
+  newFileName := fileName
+
+  // 拼接完整路径
+  fullFilePath := filepath.Join(uploadDir, newFileName)
+  hlog.Info("Generated file path with name:", fullFilePath)
+
+  return fullFilePath, nil
+}
+
 // SaveFileFromOSFile 将传入的 *os.File 文件内容保存到指定的 filePath 路径
 func SaveFileFromOSFile(file *os.File, filePath string) error {
   // 确保目标目录存在

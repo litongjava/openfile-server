@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload (with Chunking)</title>
+</head>
+<body>
+<h2>Upload ZIP File in Chunks</h2>
+<input type="file" id="fileInput">
+<button onclick="uploadFile()">Upload</button>
+
+<script>
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            alert("Please select a file to upload");
+            return;
+        }
+
+        const chunkSize = 5 * 1024 * 1024; // 5MB per chunk
+        const totalParts = Math.ceil(file.size / chunkSize);
+
+        for (let partIndex = 0; partIndex < totalParts; partIndex++) {
+            const start = partIndex * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+            const chunk = file.slice(start, end);
+
+            const formData = new FormData();
+            formData.append("file", chunk, file.name);
+            formData.append("partIndex", partIndex);
+            formData.append("totalParts", totalParts);
+            formData.append("fileName", file.name);
+            formData.append("category", "default");  // You can change category if needed
+
+            try {
+                const response = await fetch('http://127.0.0.1:9000/uploadZipShard', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    console.log(`Part ${partIndex + 1} uploaded successfully`);
+                } else {
+                    console.error(`Error uploading part ${partIndex + 1}: ${result.message}`);
+                    return;
+                }
+            } catch (error) {
+                console.error("Error uploading chunk:", error);
+                return;
+            }
+        }
+
+        console.log("All parts uploaded successfully!");
+    }
+</script>
+</body>
+</html>

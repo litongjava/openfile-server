@@ -73,7 +73,7 @@ func UploadZipShard(ctx context.Context, reqCtx *app.RequestContext) {
   fold := category + "/" + time.Now().Format("20060102")
 
   // 生成保存上传分片文件的路径
-  shardFilePath, err := myutils.GenerateFilePath(baseDir, fold, fileName+"."+strconv.Itoa(partIndex))
+  shardFilePath, err := myutils.GenerateFilePathWithName(baseDir, fold, fileName+"."+strconv.Itoa(partIndex))
   if err != nil {
     reqCtx.JSON(200, utils.H{
       "code":    0,
@@ -105,7 +105,7 @@ func UploadZipShard(ctx context.Context, reqCtx *app.RequestContext) {
 
     // 7. 遍历解压后的所有文件，执行和 Upload 方法相同的业务逻辑
     var urls []string
-    extractedFolder := baseDir + "/" + fold + "/" + strings.TrimSuffix(fileName, suffix)
+    extractedFolder := baseDir + fold + "/" + strings.TrimSuffix(fileName, suffix)
     err = filepath.Walk(extractedFolder, func(path string, info os.FileInfo, err error) error {
       if err != nil {
         return err
@@ -209,16 +209,17 @@ func UploadZipShard(ctx context.Context, reqCtx *app.RequestContext) {
 func mergeShardsAndUnzip(baseDir, fold, fileName string, totalParts int) error {
   var fileData []byte
   for i := 0; i < totalParts; i++ {
-    shardPath := baseDir + "/" + fold + "/" + fileName + "." + strconv.Itoa(i)
+    shardPath := baseDir + fold + "/" + fileName + "." + strconv.Itoa(i)
     shardData, err := os.ReadFile(shardPath)
     if err != nil {
+      hlog.Errorf("failed to read shard %d: %v", i, err)
       return fmt.Errorf("failed to read shard %d: %v", i, err)
     }
     fileData = append(fileData, shardData...)
   }
 
   // 保存合并后的文件
-  completeFilePath := baseDir + "/" + fold + "/" + fileName
+  completeFilePath := baseDir + fold + "/" + fileName
   if err := os.WriteFile(completeFilePath, fileData, 0644); err != nil {
     return fmt.Errorf("failed to save merged file: %v", err)
   }
