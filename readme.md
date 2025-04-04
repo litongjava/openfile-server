@@ -24,10 +24,11 @@ sudo apt-get install libwebp-dev -y
 sudo apt-get install gcc -y
 CGO_ENABLED=1 go build
 ```
-
+错误
 ```shell
 link: github.com/bytedance/sonic/ast: invalid reference to encoding/json.safeSet
 ```
+解决办法
 ```shell
 go get -u github.com/bytedance/sonic
 ```

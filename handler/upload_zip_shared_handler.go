@@ -94,98 +94,11 @@ func UploadZipShard(ctx context.Context, reqCtx *app.RequestContext) {
   // 判断是否是最后一个分片
   if partIndex == totalParts-1 {
     // 合并所有分片并解压
-    err := mergeShardsAndUnzip(baseDir, fold, fileName, totalParts)
+    urls, err := mergeShardsAndUnzip(baseDir, fold, fileName, totalParts)
     if err != nil {
       reqCtx.JSON(http.StatusOK, utils.H{
         "code":    0,
         "message": "Failed to merge and unzip: " + err.Error(),
-      })
-      return
-    }
-
-    // 7. 遍历解压后的所有文件，执行和 Upload 方法相同的业务逻辑
-    var urls []string
-    extractedFolder := baseDir + fold + "/" + strings.TrimSuffix(fileName, suffix)
-    err = filepath.Walk(extractedFolder, func(path string, info os.FileInfo, err error) error {
-      if err != nil {
-        return err
-      }
-      // 忽略目录，仅处理文件
-      if info.IsDir() {
-        return nil
-      }
-
-      // 打开文件以计算 MD5 值
-      f, err := os.Open(path)
-      if err != nil {
-        return err
-      }
-      md5Sum, err := myutils.CalculateFileMD5FromOSFile(f)
-      f.Close()
-      if err != nil {
-        return err
-      }
-
-      // 检查数据库中是否存在该文件记录
-      existingURL, err := GetFilepathFromDb(md5Sum)
-      if err != nil {
-        return err
-      }
-
-      var finalURL string
-      if existingURL != "" {
-        // 文件记录存在，检查磁盘上是否真实存在该文件
-        if _, err := os.Stat(existingURL); os.IsNotExist(err) {
-          // 若磁盘上不存在，则异步从当前解压文件重新保存到该路径
-          go func(srcPath, destPath string) {
-            srcFile, err := os.Open(srcPath)
-            if err != nil {
-              hlog.Error("failed to open file:", err)
-              return
-            }
-            defer srcFile.Close()
-            if err := myutils.SaveFileFromOSFile(srcFile, destPath); err != nil {
-              hlog.Error("Failed to asynchronously save file:", err)
-            }
-          }(path, existingURL)
-        }
-        finalURL = existingURL
-      } else {
-        // 文件不存在：生成新的文件路径
-        fileSuffix := strings.ToLower(filepath.Ext(info.Name()))
-        newFilePath, err := myutils.GenerateFilePath(baseDir, fold, fileSuffix)
-        if err != nil {
-          return err
-        }
-        // 将文件信息写入数据库
-        if err := SaveFileInfoToDB(md5Sum, newFilePath); err != nil {
-          hlog.Error("Failed to write file information to DB:", err)
-        }
-        // 异步保存文件到新的位置
-        go func(srcPath, destPath string) {
-          srcFile, err := os.Open(srcPath)
-          if err != nil {
-            hlog.Error("Failed to open file:", err)
-            return
-          }
-          defer srcFile.Close()
-          if err := myutils.SaveFileFromOSFile(srcFile, destPath); err != nil {
-            hlog.Error("Failed to asynchronously save file:", err)
-          }
-        }(path, newFilePath)
-        finalURL = newFilePath
-      }
-
-      // 添加 URL
-      finalURL = filepath.ToSlash(finalURL)
-      urls = append(urls, finalURL)
-      return nil
-    })
-
-    if err != nil {
-      reqCtx.JSON(http.StatusInternalServerError, utils.H{
-        "code":    0,
-        "message": "Failed to process files after unzip: " + err.Error(),
       })
       return
     }
@@ -206,14 +119,14 @@ func UploadZipShard(ctx context.Context, reqCtx *app.RequestContext) {
 }
 
 // 合并所有分片并解压
-func mergeShardsAndUnzip(baseDir, fold, fileName string, totalParts int) error {
+func mergeShardsAndUnzip(baseDir, fold, fileName string, totalParts int) ([]string, error) {
   var fileData []byte
   for i := 0; i < totalParts; i++ {
     shardPath := baseDir + fold + "/" + fileName + "." + strconv.Itoa(i)
     shardData, err := os.ReadFile(shardPath)
     if err != nil {
       hlog.Errorf("failed to read shard %d: %v", i, err)
-      return fmt.Errorf("failed to read shard %d: %v", i, err)
+      return nil, fmt.Errorf("failed to read shard %d: %v", i, err)
     }
     fileData = append(fileData, shardData...)
   }
@@ -221,7 +134,7 @@ func mergeShardsAndUnzip(baseDir, fold, fileName string, totalParts int) error {
   // 保存合并后的文件
   completeFilePath := baseDir + fold + "/" + fileName
   if err := os.WriteFile(completeFilePath, fileData, 0644); err != nil {
-    return fmt.Errorf("failed to save merged file: %v", err)
+    return nil, fmt.Errorf("failed to save merged file: %v", err)
   }
 
   // 解压文件
