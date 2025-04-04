@@ -47,7 +47,7 @@ func UploadZip(ctx context.Context, reqCtx *app.RequestContext) {
   fold := category + "/" + time.Now().Format("20060102")
 
   // 4. 生成保存 zip 文件的路径
-  zipFilePath, err := myutils.GenerateFilePath(baseDir, fold, suffix)
+  zipFilePath, err := myutils.GenerateFilePathWithName(baseDir, fold, fileHeader.Filename)
   if err != nil {
     reqCtx.JSON(200, utils.H{
       "code":    0,
