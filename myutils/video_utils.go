@@ -133,3 +133,36 @@ func ExtractKeyFrames(videoPath string, outputDir string, frameCount int) ([]str
 
   return framePaths, nil
 }
+
+// ConvertVideoToHLS 将视频文件切片成 HLS 格式，并返回前端播放时的相对路径（例如："xxx/main.m3u8"）
+func ConvertVideoToHLS(filePath, baseDir, suffix string) (string, error) {
+  // 获取文件基本名（去掉后缀），用来创建 HLS 存放目录
+  baseName := strings.TrimSuffix(filepath.Base(filePath), suffix)
+  hlsFolder := filepath.Join(filepath.Dir(filePath), baseName)
+
+  // 创建文件夹（如果不存在）
+  err := os.MkdirAll(hlsFolder, os.ModePerm)
+  if err != nil {
+    return "", err
+  }
+
+  // 定义输出的 m3u8 文件路径与切片模板
+  m3u8Output := filepath.Join(hlsFolder, "main.m3u8")
+  segmentTemplate := filepath.Join(hlsFolder, "seg_%03d.ts")
+
+  // 调用 FFmpeg 进行转换，例如：
+  // ffmpeg -i <input> -c copy -hls_time 10 -hls_list_size 0 -hls_segment_filename <segmentTemplate> <m3u8Output>
+  cmd := exec.Command("ffmpeg", "-i", filePath, "-c", "copy", "-hls_time", "10", "-hls_list_size", "0", "-hls_segment_filename", segmentTemplate, m3u8Output)
+  err = cmd.Run()
+  if err != nil {
+    return "", err
+  }
+
+  // 计算相对于基础目录（baseDir）的 HLS 文件夹路径，再拼接上"main.m3u8"
+  relativeHlsPath, err := filepath.Rel(baseDir, hlsFolder)
+  if err != nil {
+    return "", err
+  }
+  hlsPlaybackPath := filepath.Join(relativeHlsPath, "main.m3u8")
+  return hlsPlaybackPath, nil
+}
