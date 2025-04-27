@@ -84,12 +84,12 @@ func DeleteFileAndFramesByUrl(url string) error {
 
 func GetVideoFramesFromDb(uri string) (error, string) {
   selectSQL := "SELECT frames FROM open_file_frames WHERE url=?"
-  var extra string
-  err := can.Db.QueryRow(selectSQL, uri).Scan(&extra)
+  var frames string
+  err := can.Db.QueryRow(selectSQL, uri).Scan(&frames)
   if err == sql.ErrNoRows {
     return nil, ""
   }
-  return err, extra
+  return err, frames
 }
 
 func QueryAudioLengthFromDb(uri string) (error, string) {

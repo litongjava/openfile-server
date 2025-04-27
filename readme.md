@@ -22,6 +22,7 @@ docker run -dit --name=openfile-server -p 8080:80 litongjava/openfile-server:1.0
 sudo apt-get update
 sudo apt-get install libwebp-dev -y
 sudo apt-get install gcc -y
+sudo apt-get install ffmpeg -y
 CGO_ENABLED=1 go build
 ```
 错误
